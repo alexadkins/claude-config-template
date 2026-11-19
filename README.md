@@ -48,7 +48,7 @@ that already exists on both sides with different content is kept as a
 - `sync.py`: the sync; `install.py`: per-machine setup
 - `ferpa_scan.py` + `hooks/pre-commit`: privacy scan on every commit
 - `tools/make_blocklist.py`: optional roster blocklist from Canvas
-- `tools/statusline.py`: status line (model · folder · branch · ctx %)
+- `tools/statusline.py`: status line (model · folder · branch · ctx % · plan usage)
 
 Per machine, not committed (`~/.config/claude-config/`): `config.toml`,
 `state.json` (last-synced manifest), blocklists, `sync.log`.

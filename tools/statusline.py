@@ -1,7 +1,7 @@
 # /// script
 # requires-python = ">=3.11"
 # ///
-"""Claude Code status line: model · folder · git branch(*dirty) · context %.
+"""Claude Code status line: model · folder · git branch(*dirty) · context % · plan usage.
 
 Reads the status line JSON on stdin. Portable (macOS + Windows); settings.json
 points at this file via ~/claude-config, so both machines share it.
@@ -9,6 +9,7 @@ points at this file via ~/claude-config, so both machines share it.
 import json
 import subprocess
 import sys
+from datetime import datetime
 from pathlib import Path
 
 DIM, CYAN, PURPLE, YELLOW, RED, RESET = (
@@ -56,6 +57,24 @@ def context_pct(data):
     return 100 * used / size
 
 
+def plan_usage(data):
+    """Subscription usage from rate_limits: '5h 44% →21:30 · wk 41%'.
+    Absent for API-key users, so returns None."""
+    rl = data.get("rate_limits") or {}
+    out = []
+    for key, label in (("five_hour", "5h"), ("seven_day", "wk")):
+        w = rl.get(key) or {}
+        pct = w.get("used_percentage")
+        if pct is None:
+            continue
+        color = RED if pct >= 90 else YELLOW if pct >= 70 else DIM
+        text = f"{label} {pct:.0f}%"
+        if key == "five_hour" and w.get("resets_at"):
+            text += f" →{datetime.fromtimestamp(w['resets_at']):%H:%M}"
+        out.append(f"{color}{text}{RESET}")
+    return f" {DIM}·{RESET} ".join(out) or None
+
+
 def main():
     data = json.loads(sys.stdin.read() or "{}")
     cwd = (data.get("workspace") or {}).get("current_dir") or data.get("cwd") or "."
@@ -68,6 +87,9 @@ def main():
     if pct is not None:
         color = RED if pct >= 80 else YELLOW if pct >= 60 else DIM
         parts.append(f"{color}ctx {pct:.0f}%{RESET}")
+    usage = plan_usage(data)
+    if usage:
+        parts.append(usage)
     sys.stdout.reconfigure(encoding="utf-8")  # Windows consoles may default to cp1252
     print(f" {DIM}·{RESET} ".join(parts))
 
