@@ -58,17 +58,17 @@ def context_pct(data):
 
 
 def plan_usage(data):
-    """Subscription usage from rate_limits: '5h 44% →21:30 · wk 41%'.
-    Absent for API-key users, so returns None."""
+    """Subscription usage from rate_limits: '44% →21:30 · wk 41%' (unlabeled =
+    the 5-hour session window). Absent for API-key users, so returns None."""
     rl = data.get("rate_limits") or {}
     out = []
-    for key, label in (("five_hour", "5h"), ("seven_day", "wk")):
+    for key, label in (("five_hour", ""), ("seven_day", "wk ")):
         w = rl.get(key) or {}
         pct = w.get("used_percentage")
         if pct is None:
             continue
         color = RED if pct >= 90 else YELLOW if pct >= 70 else DIM
-        text = f"{label} {pct:.0f}%"
+        text = f"{label}{pct:.0f}%"
         if key == "five_hour" and w.get("resets_at"):
             text += f" →{datetime.fromtimestamp(w['resets_at']):%H:%M}"
         out.append(f"{color}{text}{RESET}")
