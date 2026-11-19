@@ -1,0 +1,3 @@
+#!/bin/sh
+# FERPA scan; see ferpa_scan.py
+exec uv run --quiet --script "$(git rev-parse --show-toplevel)/ferpa_scan.py"
